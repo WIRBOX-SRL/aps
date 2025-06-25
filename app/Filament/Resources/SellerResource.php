@@ -16,19 +16,127 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\SellerResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\SellerResource\RelationManagers;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Notifications\Notification;
 
 class SellerResource extends Resource
 {
     protected static ?string $model = Seller::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'E-commerce';
-    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Vehicles';
+    protected static ?int $navigationSort = 3;
     protected static ?string $slug = 'e-commerce/sellers';
     protected static ?string $navigationLabel = 'Sellers';
     protected static ?string $pluralModelLabel = 'Sellers';
     protected static ?string $modelLabel = 'Seller';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Super Admin vede toți sellerii
+        if (Auth::user()->hasRole('Super Admin')) {
+            return $query;
+        }
+
+        // Admin vede sellerii utilizatorilor săi și cei creați direct de el
+        if (Auth::user()->hasRole('Admin')) {
+            return $query->where(function ($query) {
+                $query->whereHas('user', function ($q) {
+                    $q->where('created_by', Auth::id()); // userii creați de acest admin
+                })
+                ->orWhere('user_id', Auth::id()); // sellerii creați direct de admin
+            });
+        }
+
+        // User vede doar sellerii săi
+        if (Auth::user()->hasRole('User')) {
+            return $query->where('user_id', Auth::id());
+        }
+
+        return $query->where('id', 0);
+    }
+
+    public static function canViewAny(): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        return Auth::user()->canAccessResourceBasedOnAdminSubscription('Seller', 'view');
+    }
+
+    public static function canCreate(): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        if (!Auth::user()->canAccessResourceBasedOnAdminSubscription('Seller', 'create')) {
+            return false;
+        }
+
+        // Verifică limita de creații
+        $currentCount = Seller::where('user_id', Auth::id())->count();
+        return Auth::user()->canCreateMoreOfResourceBasedOnAdminSubscription('Seller', $currentCount);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        if (!Auth::user()->canAccessResourceBasedOnAdminSubscription('Seller', 'edit')) {
+            return false;
+        }
+
+        // Super Admin poate edita orice seller
+        if (Auth::user()->hasRole('Super Admin')) {
+            return true;
+        }
+
+        // Admin poate edita sellerii utilizatorilor săi
+        if (Auth::user()->hasRole('Admin')) {
+            return $record->user->created_by === Auth::id();
+        }
+
+        // User poate edita doar sellerii săi
+        return $record->user_id === Auth::id();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        if (!Auth::user()->canAccessResourceBasedOnAdminSubscription('Seller', 'delete')) {
+            return false;
+        }
+
+        // Super Admin poate șterge orice seller
+        if (Auth::user()->hasRole('Super Admin')) {
+            return true;
+        }
+
+        // Admin poate șterge sellerii utilizatorilor săi
+        if (Auth::user()->hasRole('Admin')) {
+            return $record->user->created_by === Auth::id();
+        }
+
+        // User poate șterge doar sellerii săi
+        return $record->user_id === Auth::id();
+    }
 
     public static function form(Form $form): Form
     {
@@ -84,7 +192,10 @@ class SellerResource extends Resource
 
                     Forms\Components\Placeholder::make('member_since_human')
                     ->label('Member Since (relativ)')
-                    ->content(fn (Get $get) => optional(Carbon::parse($get('member_since')))->diffForHumans())
+                    ->content(function (Get $get) {
+                        $memberSince = $get('member_since');
+                        return $memberSince ? Carbon::parse($memberSince)->diffForHumans() : 'Not set';
+                    })
                     ->reactive(),
 
                     ])
@@ -94,12 +205,21 @@ class SellerResource extends Resource
                 Forms\Components\FileUpload::make('avatar')
                     ->label('')
                     ->image()
-                    ->disk('public')
+                    ->disk(fn () => auth()->user()->getAdminForUpload()->hasCloudinaryConfigured() ? 'cloudinary' : 'public')
                     ->directory('sellers/avatars')
                     ->preserveFilenames()
                     ->visibility('public')
                     ->maxSize(1024) // 1MB
-                    ->acceptedFileTypes(['image/*']),
+                    ->acceptedFileTypes(['image/*'])
+                    ->afterStateHydrated(function ($component) {
+                        if (!auth()->user()->getAdminForUpload()->hasCloudinaryConfigured()) {
+                            Notification::make()
+                                ->title('Cloudinary is not configured')
+                                ->body('The admin does not have Cloudinary settings filled in. The images will be saved locally.')
+                                ->warning()
+                                ->send();
+                        }
+                    }),
                     ])->visible(fn (Get $get) => $get('is_company') === false),
 
 
@@ -121,7 +241,7 @@ class SellerResource extends Resource
                       Forms\Components\FileUpload::make('logo')
                     ->label('')
                     ->image()
-                    ->disk('public')
+                    ->disk(fn () => auth()->user()->getAdminForUpload()->hasCloudinaryConfigured() ? 'cloudinary' : 'public')
                     ->directory('sellers/logos')
                     ->preserveFilenames()
                     ->visibility('public')
@@ -157,9 +277,12 @@ class SellerResource extends Resource
                     ->disk('public')
                     ->label('Logo')
                     ->size(50)
-                    ->circular()
-                    ->sortable()
-                    ->searchable(),
+                    ->circular(),
+                    Tables\Columns\ImageColumn::make('avatar')
+                    ->disk('public')
+                    ->label('Avatar')
+                    ->size(50)
+                    ->circular(),
                 Tables\Columns\TextColumn::make('website')
                     ->sortable()
                     ->searchable()

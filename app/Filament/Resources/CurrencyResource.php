@@ -12,14 +12,73 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
 
 class CurrencyResource extends Resource
 {
     protected static ?string $model = Currency::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+    protected static ?string $navigationGroup = 'Vehicles';
+    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $slug = 'vehicles/currencies';
+    protected static ?string $navigationLabel = 'Currencies';
+    protected static ?string $pluralModelLabel = 'Currencies';
+    protected static ?string $modelLabel = 'Currency';
+    protected static ?int $navigationSort = 5;
 
-    protected static ?int $navigationSort = 4;
+
+    public static function canViewAny(): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        return Auth::user()->canAccessResourceBasedOnAdminSubscription('Currency', 'view');
+    }
+
+    public static function canCreate(): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        if (!Auth::user()->canAccessResourceBasedOnAdminSubscription('Currency', 'create')) {
+            return false;
+        }
+
+        // Verifică limita de creații
+        $currentCount = Currency::count();
+        return Auth::user()->canCreateMoreOfResourceBasedOnAdminSubscription('Currency', $currentCount);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        return Auth::user()->canAccessResourceBasedOnAdminSubscription('Currency', 'edit');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        if (Auth::user()->is_suspended) {
+            return false;
+        }
+        if (!Auth::user()->canAccessBasedOnAdminSubscription()) {
+            return false;
+        }
+        return Auth::user()->canAccessResourceBasedOnAdminSubscription('Currency', 'delete');
+    }
+
     public static function getNavigationLabel(): string
     {
         return 'Currencies';
@@ -35,10 +94,7 @@ class CurrencyResource extends Resource
         return 'Currency';
     }
 
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Settings';
-    }
+
 
     public static function form(Form $form): Form
     {

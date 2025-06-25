@@ -1,0 +1,58 @@
+
+TVA este inclus.
+
+
+1. Timp Actiune - In cat timp expira       End date: 21 Jun 2025 02:00     - sa ii afiseze cand expira actiunea si automat sa inchida toate linkurile la expirare - sa afiseze ca anuntul a expirat - vezi imaginea ,,1,,
+
+
+
+
+2. Titlu + referinta
+
+
+
+3. Pret , Moneda  / Procent de plata minim
+
+costurile adaugate automat in pret la pasul de previzualizare a comenzii, le va seta adminul si vor fii neschimbate la toate linkurile. ( daca este prea complicat sa le adauge adminu principal pentru toti , putem face campuri pentru fiecare link si le adauga baietii) - ( vezi imaginea ,,costuri,,)
+
+pentru transport :  pret / km  ( daca alege cu livrare )  - pretul / km ar fii bine sa il adauge la fiecare link baietii si sa se calculeze daca omu alege cu livrare, sa isi ia drept reper locatia utilajului - locatia completata de client. 
+
+
+mentiune: cand clientul finalizeaza tranzactia in panou sa vad si daca are cu livrare si pretul calculat
+ 
+
+
+4. 2 numere de telefon + email - text
+
+
+
+
+ 
+5. Aici toate sunt text completate manual/anunt---------------------------------------------------------- Vezi imaginea ,,detalii,,
+Details of the classified ad
+
+Category :   
+Type of ad : 
+Reference : 
+Make : 
+Model : 
+Status : 
+Year : 
+Hours : 
+Serial number :       Daca nu il scrie sa apara N/A
+First-hand : 
+Descriere
+------------------------------------------------------------
+6. Adresa utilajului 
+
+7. Pozele anuntului
+
+
+
+
+8 . Firma + logo firma care vinde utilajul. (Detaliile firmei)
+
+
+
+
+ 

@@ -7,71 +7,84 @@ return [
 
 'show_custom_fields' => true,
     'custom_fields' => [
-        'custom_field_1' => [
-            'type' => 'text', // required
-            'label' => 'SMTP Host', // required
-            'placeholder' => 'SMTP Host', // optional
-            'id' => 'custom-field-1', // optional
-            'required' => true, // optional
-            'rules' => [], // optional
-            'hint_icon' => '', // optional
-            'hint' => '', // optional
-            'suffix_icon' => '', // optional
-            'prefix_icon' => '', // optional
-            'default' => '', // optional
-            'column_span' => 'full', // optional
-            'autocomplete' => false, // optional
+        // Email settings (for all users)
+        'smtp_host' => [
+            'type' => 'text',
+            'label' => 'SMTP Host',
+            'placeholder' => 'SMTP Host',
+            'required' => false,
+            'column_span' => 'full',
         ],
-        'custom_field_2' => [
-            'type' => 'text', // required
-            'label' => ' SMTP Username', // required
-            'placeholder' => ' Email', // optional
-            'id' => 'custom-field-2', // optional
-            'required' => true, // optional
-            'rules' => [], // optional
-            'hint_icon' => '', // optional
-            'hint' => '', // optional
-            'default' => '', // optional
-            'column_span' => 'full', // optional
+        'smtp_username' => [
+            'type' => 'text',
+            'label' => 'SMTP Username',
+            'placeholder' => 'SMTP Username',
+            'required' => false,
+            'column_span' => 'full',
         ],
-        'custom_field_4' => [
-            'type' => 'text', // required
-            'label' => 'SMTP Password', // required
-            'placeholder' => 'Password', // optional
-            'id' => 'custom-field-4', // optional
-            'required' => true, // optional
-            'hint_icon' => '', // optional
-            'hint' => '', // optional
-            'default' => '', // optional
-            'rules' => [], // optional
-            'column_span' => 'full', // optional
+        'smtp_password' => [
+            'type' => 'text',
+            'label' => 'SMTP Password',
+            'placeholder' => 'SMTP Password',
+            'required' => false,
+            'column_span' => 'full',
         ],
-         'custom_field_3' => [
-            'type' => 'text', // required
-            'label' => 'Encryption', // required
-            'placeholder' => 'SSL/TLS', // optional
-            'id' => 'custom-field-3', // optional
-            'required' => true, // optional
-            'hint_icon' => '', // optional
-            'hint' => '', // optional
-            'default' => '', // optional
-            'rules' => [], // optional
-            'column_span' => 'full', // optional
+        'smtp_encryption' => [
+            'type' => 'text',
+            'label' => 'Encryption',
+            'placeholder' => 'SSL/TLS',
+            'required' => false,
+            'column_span' => 'full',
         ],
-        'custom_field_5' => [
-            'type' => 'text', // required
-            'label' => 'SMTP Port', // required
-            'placeholder' => '554', // optional
-            'id' => 'custom-field-5', // optional
-            'required' => true, // optional
-            'hint_icon' => '', // optional
-            'hint' => '', // optional
-            'default' => '', // optional
-            'rules' => [], // optional
-            'column_span' => 'full', // optional
+        'smtp_port' => [
+            'type' => 'text',
+            'label' => 'SMTP Port',
+            'placeholder' => '554',
+            'required' => false,
+            'column_span' => 'full',
         ],
-
-
-
+        // Cloud & domain settings (doar pentru admini)
+        'cloudinary_cloud_name' => [
+            'type' => 'text',
+            'label' => 'Cloudinary Cloud Name',
+            'placeholder' => 'Cloudinary Cloud Name',
+            'required' => false,
+            'column_span' => 'full',
+        ],
+        'cloudinary_api_key' => [
+            'type' => 'text',
+            'label' => 'Cloudinary API Key',
+            'placeholder' => 'Cloudinary API Key',
+            'required' => false,
+            'column_span' => 'full',
+        ],
+        'cloudinary_api_secret' => [
+            'type' => 'text',
+            'label' => 'Cloudinary API Secret',
+            'placeholder' => 'Cloudinary API Secret',
+            'required' => false,
+            'column_span' => 'full',
+        ],
+        'cloudflare_api_key' => [
+            'type' => 'text',
+            'label' => 'Cloudflare API Key',
+            'placeholder' => 'Cloudflare API Key',
+            'required' => false,
+            'column_span' => 'full',
+        ],
+        'cloudflare_zone_id' => [
+            'type' => 'text',
+            'label' => 'Cloudflare Zone ID',
+            'placeholder' => 'Cloudflare Zone ID',
+            'required' => false,
+            'column_span' => 'full',
+        ],
+        'custom_domain' => [
+            'type' => 'text',
+            'label' => 'Custom Domain',
+            'placeholder' => 'Custom Domain',
+            'required' => false,
+            'column_span' => 'full',
+        ],
     ]
 ];

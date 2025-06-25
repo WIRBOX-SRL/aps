@@ -32,4 +32,12 @@ class Dashboard extends \Filament\Pages\Dashboard
             ?? FilamentIcon::resolve('panels::pages.dashboard.navigation-item')
             ?? (Filament::hasTopNavigation() ? 'heroicon-m-home' : 'heroicon-o-home');
     }
+
+    public function getWidgets(): array    {
+        return [
+            \App\Filament\Widgets\AnnouncementStatsWidget::class,
+            \App\Filament\Widgets\AnnouncementActionsWidget::class,
+            \App\Filament\Widgets\AnnouncementsPerUserWidget::class,
+        ];
+    }
 }

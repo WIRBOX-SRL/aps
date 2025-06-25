@@ -174,9 +174,9 @@ public function mount()
                     );
                 }
 
-                $this->currentSubscription->canceled_at =  Carbon::parse($this->currentSubscription->cancels_at)->addDays(1);
-                $this->currentSubscription->cancels_at = Carbon::parse($this->currentSubscription->cancels_at)->addDays(1);
-                $this->currentSubscription->ends_at =  Carbon::parse($this->currentSubscription->cancels_at)->addDays(1);
+                $this->currentSubscription->canceled_at =  $this->currentSubscription->cancels_at ? Carbon::parse($this->currentSubscription->cancels_at)->addDays(1) : null;
+                $this->currentSubscription->cancels_at = $this->currentSubscription->cancels_at ? Carbon::parse($this->currentSubscription->cancels_at)->addDays(1) : null;
+                $this->currentSubscription->ends_at =  $this->currentSubscription->cancels_at ? Carbon::parse($this->currentSubscription->cancels_at)->addDays(1) : null;
                 $this->currentSubscription->save();
                 $this->currentSubscription->renew($plan);
 

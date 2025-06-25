@@ -20,7 +20,7 @@ class CreateCurrenciesTable extends Migration
             $table->string('symbol', 5)->nullable();
             $table->timestamps();
         });
-        // Inserare direct în migrare:
+        // Direct insert in migration:
         if (DB::table('currencies')->count() === 0) {
             DB::table('currencies')->insert([
                  ['code' =>'AFN' , 'name' => 'Afghani', 'symbol' => '؋' ],

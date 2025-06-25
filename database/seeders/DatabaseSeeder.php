@@ -2,12 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Database\Seeders\PlansTableSeeder;
+use Database\Seeders\UsersTableSeeder;
 use Database\Seeders\CitiesTableSeeder;
 use Database\Seeders\StatesTableSeeder;
+use Database\Seeders\SellersTableSeeder;
+use Database\Seeders\VehiclesTableSeeder;
 use Database\Seeders\CountriesTableSeeder;
+use Database\Seeders\CategoriesTableSeeder;
+use Database\Seeders\AnnouncementsTableSeeder;
+use Database\Seeders\SubscriptionsTableSeeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,12 +23,14 @@ class DatabaseSeeder extends Seeder
             StatesTableSeeder::class,
             CitiesTableSeeder::class,
             CountriesTableSeeder::class,
-        ]);
-
-        User::factory()->create([
-            'name' => 'Super Admin',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('123456'),
+            UsersTableSeeder::class,
+            CategoriesTableSeeder::class,
+            PlansTableSeeder::class,
+            SubscriptionsTableSeeder::class,
+            SellersTableSeeder::class,
+            VehiclesTableSeeder::class,
+            AnnouncementsTableSeeder::class,
+            RolesAndPermissionsSeeder::class,
         ]);
     }
 }

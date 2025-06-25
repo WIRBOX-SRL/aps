@@ -22,15 +22,61 @@ class Seller extends Model
         'website',
         'user_id',
     ];
- protected function casts(): array
+
+    protected function casts(): array
     {
         return [
-            'logo' => 'string', // Assuming logo is a string URL or path
+            'logo' => 'array', // Assuming logo is a string URL or path
             'is_company' => 'boolean', // Assuming is_company is a boolean
-            'avatar' => 'string', // Assuming avatar is a string URL or path
-            'language' => 'array', // Assuming language is an array of strings
+            'avatar' => 'array', // Assuming avatar is a string URL or path
+            // Remove language from casts since we'll handle it manually
         ];
     }
+
+    // Accessor for language field - convert string to array
+    public function getLanguageAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        // Try to decode JSON first
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
+        }
+
+        // If not JSON, split by comma
+        return array_filter(array_map('trim', explode(',', $value)));
+    }
+
+    // Mutator for language field - convert array to string
+    public function setLanguageAttribute($value)
+    {
+        if (is_null($value)) {
+            $this->attributes['language'] = null;
+            return;
+        }
+
+        if (is_string($value)) {
+            $this->attributes['language'] = $value;
+            return;
+        }
+
+        if (is_array($value)) {
+            // Filter out empty values and trim
+            $filtered = array_filter(array_map('trim', $value));
+            $this->attributes['language'] = json_encode($filtered);
+            return;
+        }
+
+        $this->attributes['language'] = null;
+    }
+
     /**
      * Get the products associated with the seller.
      */
@@ -39,9 +85,8 @@ class Seller extends Model
         return $this->hasMany(Product::class);
     }
 
-public function user()
-{
-    return $this->belongsTo(User::class);
-}
-
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

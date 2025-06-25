@@ -20,6 +20,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Joaopaulolndev\FilamentEditProfile\FilamentEditProfilePlugin;
 use Filament\Navigation\MenuItem;
 use Joaopaulolndev\FilamentEditProfile\Pages\EditProfilePage;
+use Filament\Notifications\Notification;
+use App\Http\Middleware\CheckAnnouncementExpiration;
 
 
 class AdminPanelProvider extends PanelProvider
@@ -42,8 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+
             ])
             ->userMenuItems([
     'profile' => MenuItem::make()
@@ -63,10 +64,10 @@ class AdminPanelProvider extends PanelProvider
                     ->shouldShowDeleteAccountForm(false)
                     ->shouldShowBrowserSessionsForm()
                     ->shouldShowAvatarForm(
-    value: true,
-    directory: 'avatars', // image will be stored in 'storage/app/public/avatars
-    rules: 'mimes:jpeg,png|max:1024' //only accept jpeg and png files with a maximum size of 1MB
-)
+                        value: true,
+                        directory: 'avatars',
+                        rules: 'mimes:jpeg,png|max:1024'
+                    )
                                 ])
             ->middleware([
                 EncryptCookies::class,
@@ -78,6 +79,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                CheckAnnouncementExpiration::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
