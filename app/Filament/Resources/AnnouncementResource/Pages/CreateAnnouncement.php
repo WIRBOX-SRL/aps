@@ -17,15 +17,15 @@ class CreateAnnouncement extends CreateRecord
     {
         $data['user_id'] = Auth::id();
 
-        // Generează link-ul automat
-        $data['link'] = $this->generateAnnouncementLink($data);
+        // Generate a temporary link - will be updated after creation
+        $data['link'] = $this->generateTemporaryLink();
 
         return $data;
     }
 
     protected function beforeCreate(): void
     {
-        // Verifică dacă utilizatorul poate crea mai multe anunțuri
+        // Check if user can create more announcements
         $currentCount = \App\Models\Announcement::where('user_id', Auth::id())->count();
 
         if (!Auth::user()->canCreateMoreOfResourceBasedOnAdminSubscription('Announcement', $currentCount)) {
@@ -41,9 +41,11 @@ class CreateAnnouncement extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Actualizează link-ul cu ID-ul real
+        // Update the link with the real data after creation
         $record = $this->record;
-        $slug = \Str::slug($record->title ?? 'announcement');
+        $record->load(['vehicle.category', 'vehicle']);
+
+        $slug = $this->generateSlugFromRecord($record);
         $baseUrl = config('app.url');
 
         $record->update([
@@ -51,13 +53,34 @@ class CreateAnnouncement extends CreateRecord
         ]);
     }
 
-    private function generateAnnouncementLink(array $data): string
+    private function generateTemporaryLink(): string
     {
         $baseUrl = config('app.url');
-        $slug = Str::slug($data['title'] ?? 'announcement');
-        $id = $data['id'] ?? 'new';
+        return "{$baseUrl}/announcements/new/announcement";
+    }
 
-        return "{$baseUrl}/announcements/{$id}/{$slug}";
+    private function generateSlugFromRecord($record): string
+    {
+        // Try to create a meaningful slug from available data
+        $slugParts = [];
+
+        if ($record->vehicle) {
+            if ($record->vehicle->category) {
+                $slugParts[] = $record->vehicle->category->name;
+            }
+            if ($record->vehicle->brand) {
+                $slugParts[] = $record->vehicle->brand;
+            }
+            if ($record->vehicle->model) {
+                $slugParts[] = $record->vehicle->model;
+            }
+        }
+
+        if (empty($slugParts)) {
+            $slugParts[] = 'announcement';
+        }
+
+        return Str::slug(implode('-', $slugParts));
     }
 
     protected function getRedirectUrl(): string

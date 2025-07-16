@@ -2,7 +2,7 @@
 
 return [
     'avatar_column' => 'avatar_url',
-    'disk' => env('FILESYSTEM_DISK', 'public'),
+    'disk' => env('FILAMENT_EDIT_PROFILE_DISK', 'public'), // Will be dynamically set to cloudinary in AppServiceProvider
     'visibility' => 'public', // or replace by filesystem disk visibility with fallback value
 
 'show_custom_fields' => true,

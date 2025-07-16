@@ -259,6 +259,100 @@ class UserResource extends Resource
                     ->icon('heroicon-o-user-circle')
                     ->color('info')
                     ->label('Impersonate'),
+                Action::make('testSmtp')
+                    ->label('Test SMTP')
+                    ->icon('heroicon-o-envelope')
+                    ->color('success')
+                    ->visible(function ($record) {
+                        $user = Auth::user();
+                        if ($user->hasRole('Super Admin')) {
+                            return true;
+                        }
+                        if ($user->hasRole('Admin')) {
+                            return $record->created_by === $user->id;
+                        }
+                        return false;
+                    })
+                    ->form([
+                        \Filament\Forms\Components\TextInput::make('test_email')
+                            ->label('Test Email Address')
+                            ->email()
+                            ->default(fn ($record) => $record->email)
+                            ->required()
+                            ->helperText('Email address where the test email will be sent'),
+                        \Filament\Forms\Components\Toggle::make('dry_run')
+                            ->label('Dry Run (Test Configuration Only)')
+                            ->helperText('Only validate configuration without sending actual email')
+                            ->default(false),
+                    ])
+                    ->action(function ($record, array $data) {
+                        // Get email settings for the user
+                        $emailSettings = $record->getEmailSettings();
+
+                        // Check if SMTP is configured
+                        if (!self::hasSmtpConfigured($emailSettings)) {
+                            // If user has an admin, check admin's settings
+                            if ($record->hasRole('User') && $record->creator) {
+                                $adminSettings = $record->creator->getEmailSettings();
+                                if (!self::hasSmtpConfigured($adminSettings)) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('SMTP Not Configured')
+                                        ->body('Neither user nor admin has SMTP configuration.')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+                                $emailSettings = $adminSettings;
+                            } else {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('SMTP Not Configured')
+                                    ->body('No SMTP configuration found for this user.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                        }
+
+                        if ($data['dry_run']) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('SMTP Configuration Valid')
+                                ->body('SMTP configuration is properly set up.')
+                                ->success()
+                                ->send();
+                            return;
+                        }
+
+                        try {
+                            // Configure mail settings temporarily
+                            self::configureMailSettings($emailSettings);
+
+                            // Send test email
+                            \Illuminate\Support\Facades\Mail::raw(
+                                "This is a test email from {$record->name}'s SMTP configuration.\n\nSent at: " . now()->format('Y-m-d H:i:s'),
+                                function (\Illuminate\Mail\Message $message) use ($data, $record, $emailSettings) {
+                                    $message->to($data['test_email'])
+                                           ->subject("SMTP Test - {$record->name}")
+                                           ->from($emailSettings['smtp_username'], $record->name); // Use SMTP username as sender
+                                }
+                            );
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Test Email Sent')
+                                ->body("Test email sent successfully to {$data['test_email']}")
+                                ->success()
+                                ->send();
+
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('SMTP Test Failed')
+                                ->body("Failed to send test email: {$e->getMessage()}")
+                                ->danger()
+                                ->send();
+                        }
+                    })
+                    ->modalHeading('Test SMTP Configuration')
+                    ->modalDescription('Send a test email to verify SMTP configuration')
+                    ->modalSubmitActionLabel('Send Test Email'),
                 Action::make('toggleSuspend')
                     ->label(fn ($record) => $record->is_suspended ? 'Unsuspend' : 'Suspend')
                     ->icon(fn ($record) => $record->is_suspended ? 'heroicon-o-lock-open' : 'heroicon-o-lock-closed')
@@ -324,5 +418,37 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+
+    private static function hasSmtpConfigured($settings): bool
+    {
+        return !empty($settings['smtp_host']) &&
+               !empty($settings['smtp_username']) &&
+               !empty($settings['smtp_password']);
+    }
+
+    private static function configureMailSettings($settings): void
+    {
+        \Illuminate\Support\Facades\Config::set([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp' => [
+                'transport' => 'smtp',
+                'host' => $settings['smtp_host'],
+                'port' => $settings['smtp_port'] ?? 587,
+                'encryption' => $settings['smtp_encryption'] ?? 'tls',
+                'username' => $settings['smtp_username'],
+                'password' => $settings['smtp_password'],
+                'timeout' => null,
+                'local_domain' => env('MAIL_EHLO_DOMAIN'),
+            ],
+            'mail.from' => [
+                'address' => $settings['smtp_username'],
+                'name' => config('app.name'),
+            ],
+        ]);
+
+        // Clear any cached mail configuration
+        app()->forgetInstance('mail.manager');
+        app()->forgetInstance('mailer');
     }
 }

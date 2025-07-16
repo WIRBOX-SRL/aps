@@ -20,13 +20,39 @@ class EditAnnouncement extends EditRecord
 
     protected function afterSave(): void
     {
-        // Actualizează link-ul cu ID-ul real
+        // Update the link with the real data after saving
         $record = $this->record;
-        $slug = Str::slug($record->title ?? 'announcement');
+        $record->load(['vehicle.category', 'vehicle']);
+
+        $slug = $this->generateSlugFromRecord($record);
         $baseUrl = config('app.url');
 
         $record->update([
             'link' => "{$baseUrl}/announcements/{$record->id}/{$slug}"
         ]);
+    }
+
+    private function generateSlugFromRecord($record): string
+    {
+        // Try to create a meaningful slug from available data
+        $slugParts = [];
+
+        if ($record->vehicle) {
+            if ($record->vehicle->category) {
+                $slugParts[] = $record->vehicle->category->name;
+            }
+            if ($record->vehicle->brand) {
+                $slugParts[] = $record->vehicle->brand;
+            }
+            if ($record->vehicle->model) {
+                $slugParts[] = $record->vehicle->model;
+            }
+        }
+
+        if (empty($slugParts)) {
+            $slugParts[] = 'announcement';
+        }
+
+        return Str::slug(implode('-', $slugParts));
     }
 }

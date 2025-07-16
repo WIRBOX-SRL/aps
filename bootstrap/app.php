@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\CheckUserSuspended::class,
             \App\Http\Middleware\CheckAnnouncementExpiration::class,
+            \App\Http\Middleware\ConfigureCloudinary::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
